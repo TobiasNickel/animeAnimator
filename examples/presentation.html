@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!--
+    same animation as the initial AnimeAnimator but using the new AnimeAnimator that was build with esBuild.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=640, initial-scale=1.0">
+    <title>anime.js
+    </title>
+    <style>
+        body{
+            overflow: hidden;
+            margin: 0px;
+            padding: 0px;
+            min-height: 100%;
+        }
+ 
+        #playground{width:100%;height:100%;
+            user-select: none;border: black solid 1px;}
+    </style>
+</head>
+<body>
+    <div id='playground'>
+
+    </div>
+    <!-- <div class='control'>
+        <div id='resetButton' class='button'>|&lt;</div>
+        <div id='playButton' class='button'>play</div>
+        <input type='range' min='0' max='1' step="0.001" value='0' id='position'>
+        <div id='controlDisplay'></div>
+    </div> -->
+</body>
+<script src='../dist/AnimeAnimator.js'></script>
+<script>
+
+// playButton.addEventListener('click',()=>{
+//     if(playButton.innerText === 'play'){
+//         timeline.play();
+//         playButton.innerText = 'pause'
+//     }else{
+//         timeline.pause();
+//         playButton.innerText = 'play'
+
+//     }
+// })
+const taskStartStyle = {
+    'background-color':'#f00',
+    width:10,
+    height: 10,
+};
+
+function processingAnimation(id){
+    return [
+        {
+            id,
+            left: '+=1510',
+            duration: 2000,
+        },
+        {duration: 200},
+        {
+            id,
+            top: '-=10',
+            'background-color': '#0f0',
+            duration: 250,
+        },
+        {duration: 200},
+        {
+            id,
+            left: '-=1510',
+            duration: 2000,
+        },
+    ];
+}
+
+function animateHeadline(id, timestamp){
+    return [
+        {id, left: 1920/2,erase: 'easeInQuad', duration: 500, scaleY: 1},
+        [
+            [{id, duration: 500, scaleY:'.8', backgroundColor: 'rgba(255,255,255,0.5)'},{timestamp, duration: 500}, {id:'logo', duration: 500, scaleY:'1', backgroundColor: 'rgba(255,255,255,0)'},]
+        ],   
+        {id, left: 1920+(1920/2),erase: 'easeOutQuad',  duration: 500, scaleY:0},
+    ]
+}
+
+const exampleAnimationDescription = {
+    size:{
+        width:1920,
+        height:1080,
+    },
+    elements:[
+        {id:'animationSize', width: 1920-2, height: 1080-3, top:0, left:0, backgroundColor: '#444'},
+        {id: 'logo', content:"AnimeAnimator", fontSize: 100, top:350, left: -1920/2, translateX:'-50%', scaleY:0, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0)', padding: 10},
+        {id: 'definition', content:"a declarative animation library", width:1230, fontSize: 100, top:350, left: -1920/2, translateX:'-50%', scaleY:0, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0)', padding: 10},
+    ],
+    animations:[
+        ...animateHeadline('logo','headline'),
+        ...animateHeadline('definition','definition'),
+        {timestamp: 'end', duration: -10},
+    ],
+}
+
+
+
+
+// const timeline = animationDescriptionToAnimeTimeline(exampleAnimationDescription,playground,(e)=>{
+//     position.value=timeline.progress/100
+//     controlDisplay.innerText = `${Math.round((timeline.progress/10000)*timeline.duration)/10} / ${Math.round(timeline.duration/100)/10}`
+// },()=>{
+//     playButton.innerText = 'play';
+// });
+
+// timeline.pause();
+
+// controlDisplay.innerText = `${Math.round((timeline.progress/10000)*timeline.duration)/10} / ${Math.round(timeline.duration/100)/10}`
+
+playground.style.height=window.innerHeight+'px';
+//playground.style.width=window.innerWidth+'px';
+window.animator = new AnimeAnimator.AnimeAnimator(playground, exampleAnimationDescription,{autoplay: true});
+window.addEventListener('resize',AnimeAnimator.throttle(()=>{animator.resize()},100))
+</script>
+</html>
+
+
+
+{
+    // design document
+    views:{ // not sure
+        averageWageByAge:{
+            map: function(doc, meta) {
+                if(doc.type === 'user') {
+                    emit(doc.id, doc);
+                }
+                if(doc.type === 'post') {
+                    emit(doc.authorId, doc);
+                }
+            }
+        },
+        
+        averageWageByAge:{
+            map: function(user, meta) {
+                if(user.type === 'user') {
+                    emit(user.birthday, user.wage);
+                }
+            },
+            reduce: function(wage, accumulated={count:0, average:0}) {
+                return {
+                    count:accumulated.count+1, 
+                    average:((accumulated.average*accumulated.count)+wage)/ accumulated.count+1
+                };
+            }
+        }
+    }
+}
+

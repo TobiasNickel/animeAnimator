@@ -1,0 +1,40 @@
+{
+  "name": "anime-animator",
+  "version": "0.0.0",
+  "description": "declararive animations with anime js",
+  "source": "src/index.ts",
+  "main": "dist/main.js",
+  "scripts": {
+    "clean":"rm -r ./dist || echo clean",
+    "build_web": "esbuild src/index.ts --minify --bundle --platform=browser --target=chrome58,firefox57,safari11,edge16 --global-name=AnimeAnimator --outfile=dist/AnimeAnimator.js",
+    "build_node": "esbuild src/index.ts --outfile=dist/index.js",
+    "tsc": "tsc --esModuleInterop --lib dom,es2015  --declaration --outDir dist -d src/index.ts ",
+    "build": "npm run clean && npm run build_web && npm run tsc && npm run build_node",
+    "build_web_watch": "esbuild src/index.ts --minify --bundle --platform=browser --target=chrome58,firefox57,safari11,edge16 --global-name=AnimeAnimator --outfile=dist/AnimeAnimator.js --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TobiasNickel/animeAnimator.git"
+  },
+  "type": "module",
+  "keywords": [
+    "declarative",
+    "animation",
+    "anime",
+    "animejs"
+  ],
+  "author": "Tobias Nickel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TobiasNickel/animeAnimator/issues"
+  },
+  "homepage": "https://github.com/TobiasNickel/animeAnimator#readme",
+  "devDependencies": {
+    "esbuild": "^0.15.10",
+    "typescript": "4.8"
+  },
+  "dependencies": {
+    "@types/animejs": "^3.1.4",
+    "animejs": "^3.2.1"
+  }
+}

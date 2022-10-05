@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<!--
+    I used this file, refactor the code from my initial animeDefinition.html
+    into a class. so that the functionality gets reusable. Also I added the
+    features of resize and empty animations and refactored the css into js.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=640, initial-scale=1.0">
+    <title>anime.js
+    </title>
+    <style>
+        body{
+            overflow: hidden;
+            margin: 0px;
+            padding: 0px;
+            min-height: 100%;
+        }
+ 
+        #playground{width:100%;height:100%;
+            user-select: none;border: black solid 1px;}
+    </style>
+</head>
+<body>
+    <div id='playground'>
+
+    </div>
+    <!-- <div class='control'>
+        <div id='resetButton' class='button'>|&lt;</div>
+        <div id='playButton' class='button'>play</div>
+        <input type='range' min='0' max='1' step="0.001" value='0' id='position'>
+        <div id='controlDisplay'></div>
+    </div> -->
+</body>
+<script src='lib/anime.js'></script>
+<script>
+// playButton.addEventListener('click',()=>{
+//     if(playButton.innerText === 'play'){
+//         timeline.play();
+//         playButton.innerText = 'pause'
+//     }else{
+//         timeline.pause();
+//         playButton.innerText = 'play'
+
+//     }
+// })
+const taskStartStyle = {
+    'background-color':'#f00',
+    width:10,
+    height: 10,
+};
+
+function processingAnimation(id){
+    return [
+        {
+            id,
+            left: '+=1510',
+            duration: 2000,
+        },
+        {duration: 200},
+        {
+            id,
+            top: '-=10',
+            'background-color': '#0f0',
+            duration: 250,
+        },
+        {duration: 200},
+        {
+            id,
+            left: '-=1510',
+            duration: 2000,
+        },
+    ];
+}
+
+const exampleAnimationDescription = {
+    size:{
+        width:680,
+        height:120,
+    },
+    elements:[{id:'animationSize', width: 680, height: 120, top:0, left:0, border:'1px solid blue'},
+        {id:'root',top:-470,left:-600,children:[
+        {   id:'connection',
+            top:500,
+            left: 760,
+            children: [{ id: 'connection_top',
+                width: 400,
+                height: 1,
+                left:0,
+                top:0,
+                'background-color':'#000',
+            },{ id: 'connection_middle',
+                class: 'rect',
+                width: 400,
+                height: 1,
+                left:0,
+                top:10,
+                'background-color':'#000',
+            },{ id: 'connection_bottom',
+                class: 'rect',
+                width: 400,
+                height: 1,
+                left:0,
+                top:20,
+                'background-color':'#000',
+            }]
+        },
+        {   id: 'task1',
+            ...taskStartStyle,
+            top:510,
+            left: 740,
+        },
+        {   id: 'task2',
+            ...taskStartStyle,
+            top:510,
+            left: 720,
+        },
+        {   id: 'task3',
+            ...taskStartStyle,
+            top:510,
+            left: 700,
+        },
+        {   id: 'task4',
+            ...taskStartStyle,
+            top:510,
+            left: 680,
+        },
+        {   id: 'task5',
+            ...taskStartStyle,
+            top:510,
+            left: 660,
+        }
+    ]}],
+    animations:[
+        // [
+        //     {id:'task2', left:'+=10', duration: 300},
+        //     {id:'task3', left:'+=20', duration: 300},
+        //     {id:'task4', left:'+=30', duration: 300},
+        //     {id:'task5', left:'+=40', duration: 300},
+        // ],
+        // {duration: 200},
+        [[
+            ...processingAnimation('task1'),
+            ...processingAnimation('task2'),
+            ...processingAnimation('task3'),
+            ...processingAnimation('task4'),
+            ...processingAnimation('task5'),
+        ]],
+        // {duration: 200},
+        // [
+        //     {id:'task2', left:'-=10', duration: 300},
+        //     {id:'task3', left:'-=20', duration: 300},
+        //     {id:'task4', left:'-=30', duration: 300},
+        //     {id:'task5', left:'-=40', duration: 300},
+        // ],
+    ],
+}
+
+
+
+
+// const timeline = animationDescriptionToAnimeTimeline(exampleAnimationDescription,playground,(e)=>{
+//     position.value=timeline.progress/100
+//     controlDisplay.innerText = `${Math.round((timeline.progress/10000)*timeline.duration)/10} / ${Math.round(timeline.duration/100)/10}`
+// },()=>{
+//     playButton.innerText = 'play';
+// });
+
+// timeline.pause();
+
+// controlDisplay.innerText = `${Math.round((timeline.progress/10000)*timeline.duration)/10} / ${Math.round(timeline.duration/100)/10}`
+
+
+class AnimeAnimator {
+    /**
+     *@param {HTMLDivElement} container 
+     **/
+    constructor(container, animationDescription) {
+        this.container = container;
+        container.style.position
+        this.originalAnimationDescription = JSON.parse(JSON.stringify(animationDescription));
+        this.animationDescription = this._scale(animationDescription);
+        if(window.getComputedStyle(container).position === 'static'){
+            container.style.position = 'relative';
+        }
+        container.classList.add('animeAnimatorContainer');
+        this.initTimeline();
+        this.animationDescription = this._scale();
+        this.createControls();
+        this.initElements();
+
+
+        this._addAnimations(this.animationDescription.animations);
+        this.timeline.pause();
+        this.container.append(this.controls);
+    }
+    initElements(){
+        const initTL = anime.timeline({
+            easing: 'linear',
+            duration:0,
+        });
+        this.elementsById = {};
+        this._createElements(this.animationDescription.elements, this.container, initTL);
+    }
+    initTimeline(){
+        this.timeline = anime.timeline({
+            easing: 'easeInOutQuad',
+            update: ()=>{
+                this.rangeSlider.value=this.timeline.progress/100
+                this.timeDisplay.innerText = `${Math.round((this.timeline.progress/10000)*this.timeline.duration)/10} / ${Math.round(this.timeline.duration/100)/10}`
+            },
+            complete: ()=>{},
+            duration:0,
+        });
+    }
+    init(){
+
+    }
+    resize(){
+        const progress = this.timeline.progress * this.timeline.duration*.01;
+        [...this.container.children].forEach(e=>e.remove());        
+        this.initTimeline();
+        this.animationDescription = this._scale();
+        this.initElements();
+        this._addAnimations(this.animationDescription.animations);
+        
+        this.container.appendChild(this.controls);
+        this.timeline.pause();
+        setTimeout(()=>{
+            this.timeline.seek(progress)
+            console.log({progress});
+            if (playButton.innerText === 'pause') {
+                this.timeline.play();
+            }
+        },10);
+    }
+    createControls(){
+        this.controls =  createHTMLElement(`<div class='control'>
+        </div>`);
+        
+        const resetButton = createHTMLElement(`<div id='resetButton' class='button'>|&lt;</div>`);
+        const playButton = createHTMLElement(`<div id='playButton' class='button'>play</div>`);
+        const rangeSlider = createHTMLElement(`<input type='range' min='0' max='1' step="0.001" value='0' id='position'>`);
+        const timeDisplay = createHTMLElement(`<div id='controlDisplay'>${this.timeline.duration}</div>`);
+            
+        this.rangeSlider = rangeSlider;
+        this.timeDisplay = timeDisplay;
+        this.playButton = playButton;
+        this.controls.appendChild(resetButton);
+        this.controls.appendChild(playButton);
+        this.controls.appendChild(rangeSlider);
+        this.controls.appendChild(timeDisplay);
+        
+        playButton.addEventListener('click',()=>{
+            if (playButton.innerText === 'play') {
+                this.timeline.play();
+                playButton.innerText = 'pause';
+            } else {
+                this.timeline.pause();
+                playButton.innerText = 'play';
+
+            }
+        });
+        resetButton.addEventListener('click',()=>{
+            this.timeline.pause();
+            this.timeline.seek(0);
+        });
+        timeDisplay.innerHTML = `${Math.round((this.timeline.progress/10000)*this.timeline.duration)/10} / ${Math.round(this.timeline.duration/100)/10}`;
+
+        rangeSlider.addEventListener('input', ()=>{
+            this.timeline.seek((rangeSlider.value)*this.timeline.duration);
+        });
+    }
+
+    play(){
+        this.timeline.play();
+    }
+
+    _createElements (elements, parent, initTL) {
+        elements.forEach(element => {
+            const $ = document.createElement(element.tagName || 'div');
+            $.style.position = 'absolute';
+            element.$ = $;
+            this.elementsById[element.id] = $;
+            parent.appendChild($);
+            const children = element.children;
+            delete element.children;
+            initTL.add({
+                targets: $,
+                ...element
+            });
+            children && this._createElements(children, $, initTL)
+        });
+    }
+    
+    /**
+     * @param {any[]}animations
+     * @param {number}offset
+     **/
+    _addAnimations(animations, offset = 0) {
+        animations.forEach(animation => {
+            if (Array.isArray(animation)) {
+                const startOffset = offset;
+                const endTimes = animation.map(a => {
+                    if (Array.isArray(a)) {
+                        return this._addAnimations(a,startOffset);
+                    } else {
+                        return this._addAnimation(a, startOffset);
+                    }
+                });
+                const duration = Math.max(...endTimes) - startOffset;
+                offset += duration;
+            } else {
+                offset += this._addAnimation(animation, offset);
+            }
+        });
+
+        return offset;
+    }
+
+    _addAnimation(animation, offset){
+        if(animation.id){
+            animation.targets= this.elementsById[animation.id];
+            this.timeline.add(animation, offset);
+            console.log('animation added');
+        }
+        return animation.duration || 0;
+    }
+
+    _scale(){
+        const clone = JSON.parse(JSON.stringify(this.originalAnimationDescription));
+        const containerSize = { width: this.container.offsetWidth, height: this.container.offsetHeight };
+        const animationSize = clone.size;
+        const widthRatio = containerSize.width/animationSize.width;
+        const heightRatio = containerSize.height/animationSize.height;
+        const minRatio = Math.min(widthRatio, heightRatio);
+        const newAnimationSize = {width: animationSize.width*minRatio, height: animationSize.height*minRatio};
+        const offsets = {left:(containerSize.width-newAnimationSize.width)/2, top: (containerSize.height-newAnimationSize.height)/2}
+        
+        scale(clone.elements, true);
+        scale(clone.animations, true);
+        function scale(element, root=false){
+            if (Array.isArray(element)) {
+                element.forEach(e=>scale(e,root));
+            }
+            if(typeof element !== 'object') {
+                return;
+            }
+            if(element.children){
+                scale(element.children);
+            }
+            if(typeof element.top !== 'undefined'){
+                if(typeof element.top === 'string'){
+                    if(element.top.startsWith('+=')){
+                        element.top = '+='+(parseFloat(element.top.substr(2))*minRatio)
+                    }else if(element.top.startsWith('-=')){
+                        element.top = '-='+(parseFloat(element.top.substr(2))*minRatio)
+                    }
+                }else if(typeof element.top==='number'){
+                    element.top=(element.top*minRatio) + (root ? offsets.top: 0);
+                }
+            }
+            if(typeof element.left !== 'undefined'){
+                if(typeof element.left === 'string'){
+                    if(element.left.startsWith('+=')){
+                        element.left = '+='+(parseFloat(element.left.substr(2))*minRatio)
+                    }else if(element.left.startsWith('-=')){
+                        element.left = '-='+(parseFloat(element.left.substr(2))*minRatio)
+                    }
+                }else if(typeof element.left==='number'){
+                    element.left=(element.left*minRatio) +  (root ? offsets.left: 0);
+                }
+            }
+            if(typeof element.width !== 'undefined'){
+                if(typeof element.width === 'string'){
+                    if(element.width.startsWith('+=')){
+                        element.width = '+='+(parseFloat(element.width.substr(2))*minRatio)
+                    }else if(element.width.startsWith('-=')){
+                        element.width = '-='+(parseFloat(element.width.substr(2))*minRatio)
+                    }
+                }else if(typeof element.width==='number'){
+                    element.width=element.width*minRatio;
+                }
+            }
+            if(typeof element.height !== 'undefined'){
+                if(typeof element.height === 'string'){
+                    if(element.height.startsWith('+=')){
+                        element.height = '+='+(parseFloat(element.height.substr(2))*minRatio)
+                    }else if(element.height.startsWith('-=')){
+                        element.height = '-='+(parseFloat(element.height.substr(2))*minRatio)
+                    }
+                }else if(typeof element.height==='number'){
+                    element.height=element.height*minRatio;
+                }
+            }
+        }
+        console.log({widthRatio, heightRatio, minRatio,offsets, newAnimationSize, clone});
+        return clone;
+    }
+}
+function createHTMLElement(html){
+    const $ = document.createElement('div');
+    $.innerHTML = html;
+    return $.children[0];
+}
+
+document.head.appendChild(createHTMLElement(`<style>
+    .animeAnimatorContainer .control{
+        display: none;
+    }
+    .animeAnimatorContainer:hover .control{
+        display: block;
+    }
+    .animeAnimatorContainer .control{
+        position: absolute;
+        bottom:10px;
+        right: 10px;
+    }
+    .animeAnimatorContainer .control .button, .control div{
+        width: 100px;
+        text-align: center;
+        float: left;
+        border: 1px solid blue;
+        border-width: 1px 1px 1px 1px;
+    }
+    .animeAnimatorContainer .control .button:hover{
+        background-color: rgb(243, 252, 255);
+    }
+    .animeAnimatorContainer .control #position{
+        width:400px;
+    }
+</style>`));
+
+playground.style.height=window.innerHeight/2+'px';
+//playground.style.width=window.innerWidth+'px';
+window.animator = new AnimeAnimator(playground, exampleAnimationDescription);
+window.addEventListener('resize',throttle(()=>{animator.resize()},100))
+</script>
+</html>

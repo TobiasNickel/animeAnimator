@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!--
+    same animation as the initial AnimeAnimator but using the new AnimeAnimator that was build with esBuild.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=640, initial-scale=1.0">
+    <title>anime.js
+    </title>
+    <style>
+        body{
+            overflow: hidden;
+            margin: 0px;
+            padding: 0px;
+            min-height: 100%;
+        }
+ 
+        #playground{width:100%;height:100%;
+            user-select: none;border: black solid 1px;}
+    </style>
+</head>
+<body>
+    <div id='playground'>
+
+    </div>
+    <!-- <div class='control'>
+        <div id='resetButton' class='button'>|&lt;</div>
+        <div id='playButton' class='button'>play</div>
+        <input type='range' min='0' max='1' step="0.001" value='0' id='position'>
+        <div id='controlDisplay'></div>
+    </div> -->
+</body>
+<script src='../dist/AnimeAnimator.js'></script>
+<script>
+
+// playButton.addEventListener('click',()=>{
+//     if(playButton.innerText === 'play'){
+//         timeline.play();
+//         playButton.innerText = 'pause'
+//     }else{
+//         timeline.pause();
+//         playButton.innerText = 'play'
+
+//     }
+// })
+const taskStartStyle = {
+    'background-color':'#f00',
+    width:10,
+    height: 10,
+};
+
+function processingAnimation(id){
+    return [
+        {
+            id,
+            left: '+=510',
+            duration: 2000,
+        },
+        {duration: 200},
+        {
+            id,
+            top: '-=10',
+            'background-color': '#0f0',
+            duration: 250,
+        },
+        {duration: 200},
+        {
+            id,
+            left: '-=510',
+            duration: 2000,
+        },
+    ];
+}
+
+const exampleAnimationDescription = {
+    size:{
+        width:680,
+        height:120,
+    },
+    elements:[{id:'animationSize', width: 680-2, height: 120-3, top:0, left:0, border:'1px solid blue'},
+        {id:'root',top:-470,left:-600,children:[
+        {   id:'connection',
+            top:500,
+            left: 760,
+            children: [{ id: 'connection_top',
+                width: 400,
+                height: 1,
+                left:0,
+                top:0,
+                'background-color':'#000',
+            },{ id: 'connection_middle',
+                class: 'rect',
+                width: 400,
+                height: 1,
+                left:0,
+                top:10,
+                'background-color':'#000',
+            },{ id: 'connection_bottom',
+                class: 'rect',
+                width: 400,
+                height: 1,
+                left:0,
+                top:20,
+                'background-color':'#000',
+            }]
+        },
+        {   id: 'task1',
+            ...taskStartStyle,
+            top:510,
+            left: 740,
+        },
+        {   id: 'task2',
+            ...taskStartStyle,
+            top:510,
+            left: 720,
+        },
+        {   id: 'task3',
+            ...taskStartStyle,
+            top:510,
+            left: 700,
+        },
+        {   id: 'task4',
+            ...taskStartStyle,
+            top:510,
+            left: 680,
+        },
+        {   id: 'task5',
+            ...taskStartStyle,
+            top:510,
+            left: 660,
+        }
+    ]}],
+    animations:[
+        // [
+        //     {id:'task2', left:'+=10', duration: 300},
+        //     {id:'task3', left:'+=20', duration: 300},
+        //     {id:'task4', left:'+=30', duration: 300},
+        //     {id:'task5', left:'+=40', duration: 300},
+        // ],
+        // {duration: 200},
+        [[
+            ...processingAnimation('task1'),
+            ...processingAnimation('task2'),
+            ...processingAnimation('task3'),
+            ...processingAnimation('task4'),
+            ...processingAnimation('task5'),
+        ]],
+        // {duration: 200},
+        // [
+        //     {id:'task2', left:'-=10', duration: 300},
+        //     {id:'task3', left:'-=20', duration: 300},
+        //     {id:'task4', left:'-=30', duration: 300},
+        //     {id:'task5', left:'-=40', duration: 300},
+        // ],
+    ],
+}
+
+
+
+
+// const timeline = animationDescriptionToAnimeTimeline(exampleAnimationDescription,playground,(e)=>{
+//     position.value=timeline.progress/100
+//     controlDisplay.innerText = `${Math.round((timeline.progress/10000)*timeline.duration)/10} / ${Math.round(timeline.duration/100)/10}`
+// },()=>{
+//     playButton.innerText = 'play';
+// });
+
+// timeline.pause();
+
+// controlDisplay.innerText = `${Math.round((timeline.progress/10000)*timeline.duration)/10} / ${Math.round(timeline.duration/100)/10}`
+
+playground.style.height=window.innerHeight/2+'px';
+//playground.style.width=window.innerWidth+'px';
+window.animator = new AnimeAnimator.AnimeAnimator(playground, exampleAnimationDescription);
+window.addEventListener('resize',AnimeAnimator.throttle(()=>{animator.resize()},100))
+</script>
+</html>

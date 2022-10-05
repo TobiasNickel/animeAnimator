@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<!-- 
+    this is how it began with this file I first created an animation definition
+    and some code to run from at an animation
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=640, initial-scale=1.0">
+    <title>anime.js
+    </title>
+    <style>
+        body{
+            overflow: hidden
+        }
+        #playground{
+            position: absolute;
+        }
+        #playground div{
+            position: absolute;
+        }
+        #playground, #playground *{
+            user-select: none;
+        }
+        .rect{
+            position:absolute;
+            width: 10px;
+            height: 10px;
+        }
+        #connection div{
+            width:300px;
+            height:1px;
+            left:100px;
+            background-color: black;
+        }
+        #connection_top{
+            top:100px;
+        }
+        #connection_middle{
+            top:110px;
+        }
+        #connection_bottom{
+            top:120px;
+        }
+        .control{
+            position: fixed;
+            bottom:10px;
+            right: 10px;
+        }
+        .control .button, .control div{
+            width: 100px;
+            text-align: center;
+            float: left;
+            border: 1px solid blue;
+            border-width: 1px 0px 1px 1px;
+        }
+        .control .button:hover{
+            background-color: rgb(243, 252, 255);
+        }
+        .control #position{
+            width:400px;
+        }
+        #playground{width:100%;height:100%}
+    </style>
+</head>
+<body>
+    <div id='playground'>
+
+    </div>
+    <div class='control'>
+        <div id='resetButton' class='button'>|&lt;</div>
+        <div id='playButton' class='button'>play</div>
+        <input type='range' min='0' max='1' step="0.001" value='0' id='position'>
+        <div id='controlDisplay'></div>
+    </div>
+</body>
+<script src='lib/anime.js'></script>
+<script>
+playButton.addEventListener('click',()=>{
+    if(playButton.innerText === 'play'){
+        timeline.play();
+        playButton.innerText = 'pause'
+    }else{
+        timeline.pause();
+        playButton.innerText = 'play'
+
+    }
+})
+    const taskStartStyle = {
+        'background-color':'#f00',
+        width:10,
+        height: 10,
+    }
+
+function processingAnimation(id){
+    return [
+        {
+            id,
+            left: '+=510',
+            duration: 2000,
+        },
+        {duration: 200},
+        {
+            id,
+            top: 500,
+            'background-color': '#0f0',
+            duration: 250,
+        },
+        {duration: 200},
+        {
+            id,
+            left: '-=510',
+            duration: 2000,
+        },
+    ];
+}
+
+const exampleAnimationDescription = {
+    width:1920,
+    height:1080,
+    elements:[ {id:'root',top:-470,left:-600,children:[
+        {   id:'connection',
+            top:500,
+            left: 760,
+            children: [{ id: 'connection_top',
+                width: 400,
+                height: 1,
+                left:0,
+                top:0,
+                'background-color':'#000',
+            },{ id: 'connection_middle',
+                class: 'rect',
+                width: 400,
+                height: 1,
+                left:0,
+                top:10,
+                'background-color':'#000',
+            },{ id: 'connection_bottom',
+                class: 'rect',
+                width: 400,
+                height: 1,
+                left:0,
+                top:20,
+                'background-color':'#000',
+            }]
+        },
+        {   id: 'task1',
+            ...taskStartStyle,
+            top:510,
+            left: 740,
+        },
+        {   id: 'task2',
+            ...taskStartStyle,
+            top:510,
+            left: 720,
+        },
+        {   id: 'task3',
+            ...taskStartStyle,
+            top:510,
+            left: 700,
+        },
+        {   id: 'task4',
+            ...taskStartStyle,
+            top:510,
+            left: 680,
+        },
+        {   id: 'task5',
+            ...taskStartStyle,
+            top:510,
+            left: 660,
+        }
+    ]}],
+    animations:[
+        // [
+        //     {id:'task2', left:'+=10', duration: 300},
+        //     {id:'task3', left:'+=20', duration: 300},
+        //     {id:'task4', left:'+=30', duration: 300},
+        //     {id:'task5', left:'+=40', duration: 300},
+        // ],
+        // {duration: 200},
+        [[
+            ...processingAnimation('task1'),
+            ...processingAnimation('task2'),
+            ...processingAnimation('task3'),
+            ...processingAnimation('task4'),
+            ...processingAnimation('task5'),
+        ]],
+        // {duration: 200},
+        // [
+        //     {id:'task2', left:'-=10', duration: 300},
+        //     {id:'task3', left:'-=20', duration: 300},
+        //     {id:'task4', left:'-=30', duration: 300},
+        //     {id:'task5', left:'-=40', duration: 300},
+        // ],
+    ],
+}
+function animationDescriptionToAnimeTimeline(_animationDescription, parent, onUpdate, onComplete){
+    const animationDescription = JSON.parse(JSON.stringify(_animationDescription));
+    const elementsById = {};
+
+    // the init tl is used for initialization
+    const initTL = anime.timeline({
+        easing: 'linear',
+        duration:0,
+
+    });
+    window.initTL = initTL;
+    createElements(animationDescription.elements, parent, initTL, elementsById);
+    const timeline =anime.timeline({
+        easing: 'easeInOutQuad',
+        update: onUpdate,
+        complete: onComplete,
+        duration:0,
+    });
+    const offset = 0;
+    addAnimations(animationDescription.animations,elementsById,timeline,offset)
+
+    return timeline;
+}
+
+function createElements (elements, parent, initTL, elementsById) {
+    elements.forEach(element=>{
+        const $ = document.createElement(element.tagName||'div');
+        element.$ = $;
+        elementsById[element.id] = $;
+        parent.appendChild($);
+        const children = element.children;
+        delete element.children;
+        initTL.add({
+            targets: $,
+            ...element
+        });
+        children && createElements(children, $, initTL, elementsById)
+    });
+}
+/**
+ * @param {any[]}animations
+ * @param {any}elementsById
+ * @param {any}timeline
+ * @param {number}offset
+ **/
+function addAnimations(animations,elementsById,timeline,offset){
+    animations.forEach(animation=>{
+        if(Array.isArray(animation)){
+            const startOffset = offset;
+            const endTimes = animation.map(a=>{
+                if(Array.isArray(a)){
+                    return addAnimations(a,elementsById,timeline,startOffset)
+                }else{
+                    return addAnimation(a, elementsById, timeline, startOffset)
+                }
+            })
+            const duration = Math.max(...endTimes) - startOffset
+            offset += duration;
+        }else{
+            offset += addAnimation(animation, elementsById, timeline, offset)
+        }
+    });
+
+    return offset;
+}
+
+function addAnimation(animation, elementsById, timeline, offset){
+    if(animation.id){
+        animation.targets= elementsById[animation.id]
+        timeline.add(animation, offset);
+        console.log('animation added');
+    }
+    return animation.duration || 0;
+}
+const timeline = animationDescriptionToAnimeTimeline(exampleAnimationDescription,playground,(e)=>{
+    position.value=timeline.progress/100
+    controlDisplay.innerText = `${Math.round((timeline.progress/10000)*timeline.duration)/10} / ${Math.round(timeline.duration/100)/10}`
+},()=>{
+    playButton.innerText = 'play';
+});
+
+timeline.pause();
+position.addEventListener('input',()=>{
+    timeline.seek((position.value)*timeline.duration);
+});    
+controlDisplay.innerText = `${Math.round((timeline.progress/10000)*timeline.duration)/10} / ${Math.round(timeline.duration/100)/10}`
+
+</script>
+</html>
